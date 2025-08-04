@@ -2,10 +2,10 @@ FROM ubuntu:latest AS builder
 WORKDIR /work
 COPY .out /out
 RUN if [ "$(arch)" = "x86_64" ]; then \
-        mv /out/moonphaze-amd64 /moonphaze; \
+        mv /out/moonphase-amd64 /binary; \
     else \
-        mv /out/moonphaze-arm64 /moonphaze; \
+        mv /out/moonphase-arm64 /binary; \
     fi
 FROM scratch
-COPY --from=builder /moonphaze /moonphaze
-ENTRYPOINT ["/moonphaze"]
+COPY --from=builder /binary /binary
+ENTRYPOINT ["/binary"]
