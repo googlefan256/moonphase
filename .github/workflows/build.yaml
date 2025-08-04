@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - trarget: aarch64-linux-musl
+          - target: aarch64-linux-musl
             platform: arm64
           - target: x86_64-linux-musl
             platform: amd64
