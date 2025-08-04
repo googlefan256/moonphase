@@ -1,4 +1,4 @@
-name: Build moonphaze
+name: Build moonphase
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build moonphaze
+    name: Build moonphase
     strategy:
       matrix:
         include:
@@ -26,12 +26,12 @@ jobs:
         uses: mlugg/setup-zig@v2
       - name: Build binary
         run: |
-          zig cc -Wno-implicit-int -Oz -Wl,--gc-sections -Wl,--strip-all -ffunction-sections -fdata-sections -s -fmerge-all-constants -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-exceptions -fno-rtti -flto --target=${{ matrix.target }} ./source/kurdyukov1-prog.c -o moonphaze-${{ matrix.platform }}
+          zig cc -Wno-implicit-int -Oz -Wl,--gc-sections -Wl,--strip-all -ffunction-sections -fdata-sections -s -fmerge-all-constants -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-exceptions -fno-rtti -flto --target=${{ matrix.target }} ./source/kurdyukov1-prog.c -o moonphase-${{ matrix.platform }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: moonphaze-${{ matrix.platform }}
-          path: moonphaze-${{ matrix.platform }}
+          name: moonphase-${{ matrix.platform }}
+          path: moonphase-${{ matrix.platform }}
 
   release:
     name: Release docker image
@@ -39,18 +39,18 @@ jobs:
     needs: [build]
     env:
       GH_TOKEN: ${{ github.token }}
-      IMAGE_NAME: moonphaze
+      IMAGE_NAME: moonphase
     steps:
       - name: Checkout main branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - run: gh run download ${{ github.run_id }} -p moonphaze-*
+      - run: gh run download ${{ github.run_id }} -p moonphase-*
 
       - run: mkdir .out
 
-      - run: mv moonphaze-*/moonphaze-* .out/
+      - run: mv moonphase-*/moonphase-* .out/
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
