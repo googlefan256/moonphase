@@ -1,0 +1,76 @@
+name: Build moonphaze
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build moonphaze
+    strategy:
+      matrix:
+        include:
+          - trarget: aarch64-linux-musl
+            platform: arm64
+          - target: x86_64-linux-musl
+            platform: amd64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install zig
+        uses: mlugg/setup-zig@v2
+      - name: Build binary
+        run: |
+          zig cc -Wno-implicit-int -Oz -Wl,--gc-sections -Wl,--strip-all -ffunction-sections -fdata-sections -s -fmerge-all-constants -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-exceptions -fno-rtti -flto --target=${{ matrix.target }} ./source/kurdyukov1-prog.c -o moonphaze-${{ matrix.platform }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: moonphaze-${{ matrix.platform }}
+          path: moonphaze-${{ matrix.platform }}
+
+  release:
+    name: Release docker image
+    runs-on: ubuntu-latest
+    needs: [build]
+    env:
+      GH_TOKEN: ${{ github.token }}
+      IMAGE_NAME: moonphaze
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - run: gh run download ${{ github.run_id }} -p moonphaze-*
+
+      - run: mkdir .out
+
+      - run: mv moonphaze-*/moonphaze-* .out/
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/arm64
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
